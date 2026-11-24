@@ -1,0 +1,31 @@
+{
+  "name": "patrician-hanse",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "package": "node scripts/package-portable.mjs",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint",
+    "lint:ritmo": "ritmo-devtools lint src/lint.ts",
+    "test": "vitest run",
+    "check": "npm run typecheck && npm run lint && npm run lint:ritmo && npm run test"
+  },
+  "dependencies": {
+    "@typeonce/ritmo": "^0.27.0",
+    "@typeonce/ritmo-render": "^0.27.0",
+    "three": "^0.187.0"
+  },
+  "devDependencies": {
+    "@typeonce/oxlint-plugin-ritmo": "^0.27.0",
+    "@typeonce/ritmo-devtools": "^0.27.0",
+    "@types/three": "^0.187.0",
+    "oxlint": "^1.95.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8",
+    "vitest": "^4.1.12"
+  }
+}

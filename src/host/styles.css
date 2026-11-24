@@ -1,0 +1,906 @@
+:root {
+  --paper-bg: #f0f2ec;
+  --paper-card: #f7f8f4;
+  --paper-recessed: #e8ece3;
+  --paper-shadow: #d5dad0;
+  --ink-primary: #3d4943;
+  --ink-deep: #25302b;
+  --ink-muted: #748079;
+  --border-line: #c6ccc2;
+  --border-soft: #dfe3da;
+  --accent-blue: #2f5a9c;
+  --accent-blue-wash: #eef3fb;
+  --accent-blue-border: #c5d4ec;
+  --accent-red: #b04a39;
+  --accent-red-wash: #faefed;
+  --accent-green: #4f8a3e;
+  --accent-green-wash: #eef6eb;
+  --accent-ochre: #b38436;
+  --accent-ochre-wash: #faf4e6;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --drawer-w: 396px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--paper-bg);
+  color: var(--ink-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+/* Crisp SVG paper-grain + subtle vignette overlay matching Inkline Town */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 40;
+  opacity: 0.055;
+  background-image:
+    radial-gradient(var(--ink-deep) 0.55px, transparent 0.55px),
+    radial-gradient(var(--ink-muted) 0.45px, transparent 0.45px);
+  background-size: 5px 5px, 9px 9px;
+  background-position: 0 0, 2px 3px;
+}
+
+.scene-root {
+  position: fixed;
+  inset: 0;
+}
+
+.hanse-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+}
+
+.hanse-canvas:active {
+  cursor: grabbing;
+}
+
+/* ── Projected 3D Map Ink Badges ── */
+
+.map-label-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  overflow: hidden;
+}
+
+.city-map-badge {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: auto;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 3px 7px;
+  background: color-mix(in srgb, var(--paper-card) 93%, transparent);
+  border: 1px solid var(--border-line);
+  border-radius: 6px;
+  box-shadow: 0 2px var(--paper-shadow);
+  color: var(--ink-deep);
+  transition: border-color 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+
+.city-map-badge:hover {
+  border-color: var(--ink-primary);
+  background: var(--paper-card);
+}
+
+.city-map-badge.selected {
+  border-color: var(--accent-blue);
+  background: var(--accent-blue-wash);
+  box-shadow: 0 2px var(--accent-blue-border);
+}
+
+.city-map-badge.famine {
+  border-color: var(--accent-red);
+  background: var(--accent-red-wash);
+}
+
+.badge-name {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.badge-sigs {
+  display: flex;
+  gap: 4px;
+  font-size: 9.5px;
+  font-weight: 700;
+}
+
+.badge-sigs .sig.scarce {
+  color: var(--accent-red);
+}
+
+.badge-sigs .sig.cheap {
+  color: var(--accent-green);
+}
+
+/* ── Inkline Card Surfaces & Buttons ── */
+
+.ink-card {
+  background: var(--paper-card);
+  border: 1px solid var(--border-line);
+  border-radius: 9px;
+  box-shadow: 0 2px var(--paper-shadow);
+}
+
+.ink-btn {
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-primary);
+  background: var(--paper-card);
+  border: 1px solid var(--border-line);
+  border-radius: 6px;
+  padding: 5px 8px;
+  cursor: pointer;
+  box-shadow: 0 1.5px var(--paper-shadow);
+  transition: background 0.12s, border-color 0.12s, transform 0.08s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.ink-btn:hover:not(:disabled) {
+  background: var(--paper-recessed);
+  border-color: var(--ink-primary);
+}
+
+.ink-btn:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+.ink-btn:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.ink-btn.primary {
+  background: var(--accent-blue-wash);
+  border-color: var(--accent-blue-border);
+  color: var(--accent-blue);
+}
+
+.ink-btn.primary:hover:not(:disabled) {
+  border-color: var(--accent-blue);
+}
+
+.ink-btn.active {
+  background: var(--ink-primary);
+  border-color: var(--ink-deep);
+  color: var(--paper-card);
+}
+
+.ink-btn.danger {
+  background: var(--accent-red-wash);
+  border-color: var(--accent-red);
+  color: var(--accent-red);
+}
+
+.ink-btn.mini {
+  padding: 2px 5px;
+  font-size: 10px;
+  border-radius: 4px;
+}
+
+/* ── Unified Non-Overlapping Top Bar (Zero Collision at Any Width!) ── */
+
+.hud-top-bar {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  right: calc(var(--drawer-w) + 20px);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: none;
+  transition: right 0.2s ease;
+}
+
+.drawer-collapsed .hud-top-bar {
+  right: 10px;
+}
+
+.top-primary-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.top-primary-row > * {
+  pointer-events: auto;
+}
+
+.ledger-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  overflow: hidden;
+}
+
+.ledger-cell {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 9px;
+  border-right: 1px solid var(--border-soft);
+}
+
+.ledger-cell:last-child {
+  border-right: none;
+}
+
+.ledger-cell small {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-muted);
+}
+
+.ledger-cell b {
+  font-size: 12.5px;
+  color: var(--ink-deep);
+}
+
+.ledger-cell .neg {
+  color: var(--accent-red);
+}
+
+.ledger-cell .pos {
+  color: var(--accent-green);
+}
+
+.speed-bar {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 6px;
+}
+
+.top-actions-cluster {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+}
+
+.rank-strip {
+  pointer-events: auto;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+  padding: 4px 10px;
+  font-size: 10.5px;
+  align-self: flex-start;
+}
+
+.rank-strip .rank-title {
+  font-weight: 700;
+  color: var(--accent-blue);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.rank-bar-track {
+  width: 72px;
+  height: 5px;
+  background: var(--border-soft);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.rank-bar-fill {
+  height: 100%;
+  background: var(--accent-blue);
+  transition: width 0.25s;
+}
+
+.rank-next-hint {
+  color: var(--ink-muted);
+  font-size: 10px;
+}
+
+/* ── Collapsible Right City & Guild Ledger Drawer ── */
+
+.ledger-drawer {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  bottom: 10px;
+  width: var(--drawer-w);
+  z-index: 22;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: transform 0.22s ease;
+}
+
+.drawer-collapsed .ledger-drawer {
+  transform: translateX(calc(var(--drawer-w) + 20px));
+}
+
+.drawer-reopen-tab {
+  position: fixed;
+  top: 58px;
+  right: 10px;
+  z-index: 23;
+  display: none;
+}
+
+.drawer-collapsed .drawer-reopen-tab {
+  display: inline-flex;
+}
+
+.drawer-header {
+  padding: 9px 11px 7px;
+  border-bottom: 1px solid var(--border-soft);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.drawer-title h2 {
+  margin: 0;
+  font-size: 14.5px;
+  color: var(--ink-deep);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.drawer-title .sub {
+  font-size: 10px;
+  color: var(--ink-muted);
+  margin-top: 2px;
+}
+
+.drawer-head-btns {
+  display: flex;
+  gap: 4px;
+  flex: none;
+}
+
+.city-pill-row {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.pill {
+  font-size: 9.5px;
+  padding: 2px 5px;
+  border-radius: 4px;
+  border: 1px solid var(--border-soft);
+  background: var(--paper-bg);
+  color: var(--ink-primary);
+}
+
+.pill.blue {
+  background: var(--accent-blue-wash);
+  border-color: var(--accent-blue-border);
+  color: var(--accent-blue);
+}
+
+.pill.red {
+  background: var(--accent-red-wash);
+  border-color: var(--accent-red);
+  color: var(--accent-red);
+}
+
+.pill.green {
+  background: var(--accent-green-wash);
+  border-color: var(--accent-green);
+  color: var(--accent-green);
+}
+
+.drawer-tabs {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-bottom: 1px solid var(--border-soft);
+  background: var(--paper-bg);
+}
+
+.drawer-tab {
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--ink-muted);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 7px 1px;
+  cursor: pointer;
+}
+
+.drawer-tab:hover {
+  color: var(--ink-deep);
+}
+
+.drawer-tab.active {
+  color: var(--accent-blue);
+  border-bottom-color: var(--accent-blue);
+  background: var(--paper-card);
+}
+
+.drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px 9px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+/* ── Market Ledger Table (Zero Horizontal Scroll + Average Cost & Live P&L!) ── */
+
+.trade-source-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 5px 7px;
+  background: var(--paper-bg);
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  font-size: 10.5px;
+}
+
+.market-row {
+  display: grid;
+  grid-template-columns: 56px 1fr 56px 110px;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 4px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.market-row:last-child {
+  border-bottom: none;
+}
+
+.good-cell {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.good-code {
+  font-weight: 700;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.good-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  flex: none;
+}
+
+.good-sub {
+  font-size: 9px;
+  color: var(--ink-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.price-scale-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.price-nums {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+}
+
+.price-nums .sig-cheap {
+  color: var(--accent-green);
+  font-weight: 700;
+}
+
+.price-nums .sig-scarce {
+  color: var(--accent-red);
+  font-weight: 700;
+}
+
+.price-nums .sig-pricey {
+  color: var(--accent-ochre);
+  font-weight: 700;
+}
+
+.price-scale-bar {
+  position: relative;
+  height: 5px;
+  background: var(--border-soft);
+  border-radius: 2px;
+}
+
+.price-scale-mid {
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  width: 1px;
+  background: var(--ink-muted);
+  opacity: 0.6;
+}
+
+.price-scale-tick {
+  position: absolute;
+  top: -2px;
+  width: 5px;
+  height: 9px;
+  border-radius: 1.5px;
+  transform: translateX(-50%);
+  background: var(--ink-deep);
+}
+
+.price-scale-tick.cheap {
+  background: var(--accent-green);
+}
+
+.price-scale-tick.scarce {
+  background: var(--accent-red);
+}
+
+.price-scale-tick.pricey {
+  background: var(--accent-ochre);
+}
+
+.hold-cell {
+  text-align: right;
+  font-size: 10px;
+  line-height: 1.25;
+}
+
+.pnl-pos {
+  color: var(--accent-green);
+  font-weight: 700;
+}
+
+.pnl-neg {
+  color: var(--accent-red);
+  font-weight: 700;
+}
+
+.trade-btns {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+}
+
+.trade-btns .ink-btn.mini {
+  padding: 2px 2px;
+  font-size: 9.5px;
+}
+
+/* ── Section Cards inside Drawer ── */
+
+.section-card {
+  border: 1px solid var(--border-soft);
+  border-radius: 7px;
+  background: var(--paper-bg);
+  padding: 7px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.section-card h3 {
+  margin: 0;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-deep);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.row-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+
+.biz-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 5px;
+}
+
+.biz-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 6px;
+  background: var(--paper-card);
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+}
+
+/* ── Bottom-Left Ship Command Bar & Chronicle Margin Log ── */
+
+.hud-bottom-left {
+  position: fixed;
+  left: 10px;
+  bottom: 10px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: min(460px, calc(100vw - var(--drawer-w) - 30px));
+}
+
+.drawer-collapsed .hud-bottom-left {
+  width: min(460px, calc(100vw - 20px));
+}
+
+.chronicle-box {
+  padding: 5px 9px;
+  max-height: 86px;
+  overflow-y: auto;
+  font-size: 10px;
+  line-height: 1.45;
+  color: var(--ink-muted);
+}
+
+.chronicle-line {
+  display: flex;
+  gap: 7px;
+}
+
+.chronicle-date {
+  color: var(--ink-deep);
+  font-weight: 700;
+  flex: none;
+}
+
+.ship-dock-bar {
+  padding: 7px 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.ship-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.ship-sail-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.ink-select {
+  font-family: inherit;
+  font-size: 11px;
+  color: var(--ink-deep);
+  background: var(--paper-card);
+  border: 1px solid var(--border-line);
+  border-radius: 5px;
+  padding: 4px 6px;
+}
+
+/* ── Interactive Historical Event Folio Banner ── */
+
+.event-folio {
+  position: fixed;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  z-index: 28;
+  width: min(460px, calc(100vw - 32px));
+  padding: 12px 14px;
+  background: var(--paper-card);
+  border: 2px solid var(--accent-red);
+  border-radius: 10px;
+  box-shadow: 0 4px var(--paper-shadow);
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.event-folio.open {
+  display: flex;
+}
+
+.event-folio h3 {
+  margin: 0;
+  font-size: 13px;
+  color: var(--accent-red);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.event-folio p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--ink-primary);
+}
+
+.event-choices {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* ── Wax Seal Toast & Modals ── */
+
+.seal-toast {
+  position: fixed;
+  top: 76px;
+  left: 50%;
+  transform: translateX(-50%) scale(0.92);
+  z-index: 35;
+  padding: 8px 16px;
+  background: var(--paper-card);
+  border: 2px solid var(--accent-red);
+  border-radius: 8px;
+  box-shadow: 0 4px var(--paper-shadow);
+  color: var(--accent-red);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s, transform 0.25s;
+}
+
+.seal-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+}
+
+dialog.ink-modal {
+  padding: 0;
+  border: 1px solid var(--ink-primary);
+  border-radius: 10px;
+  background: var(--paper-card);
+  color: var(--ink-primary);
+  box-shadow: 0 6px 0 var(--paper-shadow);
+  max-width: 500px;
+  width: calc(100vw - 32px);
+  font-family: var(--font-mono);
+}
+
+dialog.ink-modal::backdrop {
+  background: rgba(37, 48, 43, 0.35);
+}
+
+.modal-inner {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal-inner h2 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--ink-deep);
+}
+
+.modal-inner p {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+.hint-list {
+  margin: 0;
+  padding-left: 16px;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+@media (max-width: 1020px) {
+  :root {
+    --drawer-w: 356px;
+  }
+}
+
+/* Ledger leaves, ruled margins and printer's registration corners. */
+.ink-card {
+  border-radius: 2px;
+  border-color: var(--border-line);
+  background-color: var(--paper-card);
+  box-shadow: 0 2px 0 var(--paper-bg), 0 3px 0 var(--border-line);
+}
+.drawer-header {
+  padding: 15px 14px 11px 19px;
+  background:
+    linear-gradient(var(--accent-red), var(--accent-red)) 9px 8px / 8px 1px,
+    linear-gradient(var(--accent-red), var(--accent-red)) 9px 8px / 1px 8px,
+    linear-gradient(var(--ink-muted), var(--ink-muted)) right 8px bottom 7px / 8px 1px,
+    linear-gradient(var(--ink-muted), var(--ink-muted)) right 8px bottom 7px / 1px 8px;
+  background-repeat: no-repeat;
+  border-bottom: 3px double var(--border-line);
+}
+.drawer-title h2, .modal-inner h2, .badge-name, .ledger-cell b {
+  font-family: Georgia, "Times New Roman", serif;
+}
+.drawer-title h2 { font-size: 22px; line-height: 1.1; }
+.ledger-cell b { font-size: 16px; }
+.drawer-body {
+  background-image: linear-gradient(90deg, var(--border-soft) 1px, transparent 1px);
+  background-size: 100% 100%;
+  background-position: 4px 0;
+}
+.section-card, .biz-row, .ink-btn, .pill, .ink-select { border-radius: 2px; }
+.section-card h3 { padding-bottom: 4px; border-bottom: 1px solid var(--border-line); }
+.city-map-badge {
+  border-radius: 1px;
+  border-block-color: var(--ink-muted);
+  box-shadow: 0 1px 0 var(--paper-shadow);
+}
+.badge-name { font-size: 13px; }
+.badge-sigs:empty { display: none; }
+.city-map-badge.selected { border-left: 3px solid var(--accent-blue); }
+.drawer-reopen-tab, .event-folio { position: static; transform: none; }
+.event-folio { width: 100%; border-radius: 2px; }
+.drawer-header, .drawer-head-btns, .ship-header-row, .row-between { flex-wrap: wrap; }
+.hud-top-bar, .hud-bottom-left { max-height: 44dvh; overflow-y: auto; }
+.hud-top-bar { scrollbar-width: thin; }
+.hud-top-bar .ink-card { max-width: 100%; }
+.hud-bottom-left > * { flex-shrink: 0; }
+
+@media (max-width: 720px) {
+  .ledger-drawer {
+    top: auto; inset-inline: 6px; bottom: 6px; width: auto; height: 45dvh;
+  }
+  .drawer-collapsed .ledger-drawer { transform: translateY(calc(100% + 12px)); }
+  .hud-top-bar, .drawer-collapsed .hud-top-bar { inset-inline: 6px; top: 6px; max-height: 26dvh; }
+  .hud-bottom-left { left: 6px; bottom: calc(45dvh + 12px); width: calc(100vw - 12px); max-height: 21dvh; }
+  .drawer-collapsed .hud-bottom-left { bottom: 6px; max-height: 30dvh; }
+  .market-row { grid-template-columns: 44px minmax(0,1fr) 45px 98px; gap: 3px; }
+}
